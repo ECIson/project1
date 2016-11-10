@@ -228,8 +228,16 @@ def user_homepage(user):
     cursor.close()
     return render_template('user_homepage.html', **context)
 
+    
+@app.route('/card_glossary')
+def card_glossary():
+    cursor = g.conn.execute("SELECT * FROM cards_and_relations, classes WHERE classes.classid=cards_and_relations.classid ORDER BY cards_and_relations.name ASC")  # FLAG
+    context = {}
+    context['cards'] = cursor.fetchall()
+    cursor.close()
+    return render_template('card_glossary.html', **context)
 
-
+    
 if __name__ == "__main__":
     import click
 
