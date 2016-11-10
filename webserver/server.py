@@ -18,11 +18,12 @@ Read about it online.
 import os
 from sqlalchemy import *
 from sqlalchemy.pool import NullPool
-from flask import Flask, request, render_template, g, redirect, Response
+from flask import Flask, session, request, render_template, g, redirect, Response
 
 tmpl_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'templates')
 app = Flask(__name__, template_folder=tmpl_dir)
 
+app.secret_key = 'F12Zr47j\3yX R~X@H!jmM]Lwf/,?KT'
 
 #
 # The following uses the postgresql test.db -- you can use this for debugging purposes
@@ -225,8 +226,19 @@ def user_homepage(user):
     context['username'] = stats[1]
     context['rank'] = stats[3]
     context['stars'] = stats[4]
+    session['user'] = user
     cursor.close()
     return render_template('user_homepage.html', **context)
+    
+    
+@app.route('/cards')
+def cards():
+    user = session['user']
+    cursor = g.conn.execute("SELECT * FROM users, users_have_cards, cards_and_relations, classes WHERE users.userid = " + str(user) + " AND users.userid=users_have_cards.userid AND users_have_cards.cardid=cards_and_relations.cardid AND classes.classid=cards_and_relations.classid ORDER BY cards_and_relations.name ASC")  # FLAG
+    context = {}
+    context['cards'] = cursor.fetchall()
+    cursor.close()
+    return render_template('cards.html', **context)
 
     
 @app.route('/card_glossary')
