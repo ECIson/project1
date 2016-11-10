@@ -1,0 +1,35 @@
+<html>
+<style>
+    body{
+    font-size: 15pt;
+    font-family: arial;
+    }
+</style>
+
+
+<body>
+<h1>Cards</h1>
+
+<div>
+    {% for n in cards%}
+    <div>{{n[8]}}</div>
+    <div>Mana Cost: {{n[17]}}</div>
+    {% if n[11] == True %}
+    <div>Attack: {{n[9]}}</div>
+    <div>Health: {{n[10]}}</div>
+    {% endif %}
+    {% if n[12] != '' %}
+    <div>Description: {{n[12]}}</div>
+    {% endif %}
+    {% if n[19] != '' %}
+    <div>Creature: {{n[19]}}</div>
+    {% endif %}
+    <div>Class: {{n[20]}}</div>
+    </br>
+    {% endfor %}
+</div>
+
+</body>
+
+
+</html>
