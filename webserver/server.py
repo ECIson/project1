@@ -239,6 +239,27 @@ def cards():
     context['cards'] = cursor.fetchall()
     cursor.close()
     return render_template('cards.html', **context)
+    
+@app.route('/decks')
+def decks():
+    user = session['user']
+    cursor = g.conn.execute("SELECT * FROM users, decks, classes WHERE users.userid = " + str(user) + " AND users.userid=decks.userid AND classes.classid=decks.classid ORDER BY decks.name ASC")  # FLAG
+    context = {}
+    context['decks'] = cursor.fetchall()
+    cursor.close()
+    return render_template('decks.html', **context)
+    
+@app.route('/decks/<id>')
+def decks_id(id):
+    user = session['user']
+    context = {}
+    context['cards'] = []
+    for n in range(1,30):
+      cursor = g.conn.execute("SELECT * FROM users, cards_and_relations, classes, decks WHERE users.userid = " + str(user) + " AND decks.deckid = " + str(id) + " AND users.userid=decks.userid AND " + 
+  ''' decks.cardid'''+str(n)+''' = cards_and_relations.cardid AND classes.classid=cards_and_relations.classid ORDER BY cards_and_relations.name ASC''')  # FLAG
+      context['cards'].append(cursor.fetchall())
+
+    return render_template('deckcards.html', **context)
 
     
 @app.route('/card_glossary')
