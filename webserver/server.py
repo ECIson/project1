@@ -270,6 +270,38 @@ def card_glossary():
     cursor.close()
     return render_template('card_glossary.html', **context)
 
+@app.route('/store')
+def store():
+    cursor = g.conn.execute("SELECT * FROM expansions WHERE CAST(startdate AS DATE) < CAST(NOW() AS DATE)") # AND (CAST(enddate AS DATE) > CAST(NOW() AS DATE) OR enddate IS NULL)")
+    context = {}
+    context['expansions'] = cursor.fetchall()
+    cursor.close()
+    return render_template('store.html', **context)
+
+@app.route('/inventory')
+def inventory():
+    #get user id
+    cursor = g.conn.execute("~select packs from user~")
+    context = {}
+    context['packs'] = cursor.fetchall()
+    cursor.close()
+    return render_template('inventory.html')
+
+@app.route('/purchased', methods=["POST", "GET"])
+def purchased():
+    if session['user'] is None:
+        return render_template('sign_in.html')
+    else:
+        cursor = g.conn.execute("SELECT * FROM packs_and_buys WHERE expansionid = " + request.form['expan'] + " AND userid = " + str(session['user']))
+        r = cursor.first()
+        if r:
+            g.conn.execute("INSERT INTO packs_and_buys VALUES(1, 1, " + request.form['expan'] + ", " + str(session['user']) + ")")
+            cursor.close()
+        else:
+            g.conn.execute("UPDATE packs_and_buys SET expansionid = expansionid + 1 WHERE expansionid = " + request.form['expan'] + " AND userid = " + str(session['user']))
+            cursor.close()
+        return user_homepage(session['user'])
+
     
 if __name__ == "__main__":
     import click
