@@ -19,6 +19,7 @@ import os
 from sqlalchemy import *
 from sqlalchemy.pool import NullPool
 from flask import Flask, session, request, render_template, g, redirect, Response
+from random import randint
 
 tmpl_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'templates')
 app = Flask(__name__, template_folder=tmpl_dir)
@@ -318,10 +319,22 @@ def open():
         return render_template("open_pack.html")
 
 def chooseFive(r):
-    # get 5 random number
-    # sum up all of the weights
-    # iterate through to find cardids
-    pass
+    total = 0
+    for row in r:
+        total += row[4]
+    cards = [randint(1, total), randint(1, total), randint(1, total), randint(1, total), randint(1, total)]
+    cards.sort()
+    total = 0
+    result = []
+    i = 0
+    for row in r:
+        total += row[4]
+        while i < 5 and cards[i] <= total:
+            result.append(row[0])
+            i += 1
+        if i > 4:
+            break
+    return result
 
 
 if __name__ == "__main__":
