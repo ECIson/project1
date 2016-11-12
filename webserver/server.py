@@ -315,8 +315,16 @@ def open():
         return render_template("pack_empty.html")
     else:
         cards = chooseFive(r)
+        context = {}
+        context['cards'] = cards
+        for card in cards:
+            cursor2 = g.conn.execute("SELECT * FROM users_have_cards WHERE cardid = " + card[0] + " AND userid = " + session['user'])
+            r = cursor2.first()
+            if r is None:
+                g.conn.execute("INSERT INTO users_have_cards VALUES (" + card[0] + ", " + session['user'] + ")")
+            cursor2.close()
         cursor.close()
-        return render_template("open_pack.html")
+        return render_template("open_pack.html", **context)
 
 def chooseFive(r):
     total = 0
@@ -330,7 +338,7 @@ def chooseFive(r):
     for row in r:
         total += row[4]
         while i < 5 and cards[i] <= total:
-            result.append(row[0])
+            result.append((row[0],row[1]))
             i += 1
         if i > 4:
             break
