@@ -280,12 +280,12 @@ def store():
 
 @app.route('/inventory')
 def inventory():
-    #get user id
-    cursor = g.conn.execute("~select packs from user~")
+    cursor = g.conn.execute("SELECT * FROM packs_and_buys INNER JOIN  expansions ON "
+                            "packs_and_buys.expansionid = expansions.expansionid WHERE userid = " + str(session['user']))
     context = {}
     context['packs'] = cursor.fetchall()
     cursor.close()
-    return render_template('inventory.html')
+    return render_template('inventory.html', **context)
 
 @app.route('/purchased', methods=["POST", "GET"])
 def purchased():
@@ -294,11 +294,13 @@ def purchased():
     else:
         cursor = g.conn.execute("SELECT * FROM packs_and_buys WHERE expansionid = " + request.form['expan'] + " AND userid = " + str(session['user']))
         r = cursor.first()
-        if r:
+        if r is None:
+            print('A')
             g.conn.execute("INSERT INTO packs_and_buys VALUES(1, 1, " + request.form['expan'] + ", " + str(session['user']) + ")")
             cursor.close()
         else:
-            g.conn.execute("UPDATE packs_and_buys SET expansionid = expansionid + 1 WHERE expansionid = " + request.form['expan'] + " AND userid = " + str(session['user']))
+            print('B')
+            g.conn.execute("UPDATE packs_and_buys SET quantity = quantity + 1 WHERE expansionid = " + request.form['expan'] + " AND userid = " + str(session['user']))
             cursor.close()
         return user_homepage(session['user'])
 
