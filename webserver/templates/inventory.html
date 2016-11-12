@@ -14,9 +14,9 @@
     {% for n in packs%}
     <div>{{n[5]}}</div>
     Quantity: {{n[1]}}
-    <form method="POST" action="/purchased">
+    <form method="POST" action="/open">
     <div class="container">
-        <button name="expan" type="submit" value={{n[2]}}>Open</button>
+        <button name="pack" type="submit" value={{n[2]}}>Open</button>
     </div>
 </form>
     </br>

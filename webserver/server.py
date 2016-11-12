@@ -304,7 +304,26 @@ def purchased():
             cursor.close()
         return user_homepage(session['user'])
 
-    
+@app.route('/open', methods=["POST", "GET"])
+def open():
+    cursor = g.conn.execute("SELECT c.cardid, c.name, c.rarityname, c.expansionid, r.weight FROM cards_and_relations "
+                            "AS c INNER JOIN raritytable AS r ON c.rarityname = r.name WHERE c.expansionid = " + request.form['pack'])
+    r = cursor.fetchall()
+    if r is None:
+        cursor.close()
+        return render_template("pack_empty.html")
+    else:
+        cards = chooseFive(r)
+        cursor.close()
+        return render_template("open_pack.html")
+
+def chooseFive(r):
+    # get 5 random number
+    # sum up all of the weights
+    # iterate through to find cardids
+    pass
+
+
 if __name__ == "__main__":
     import click
 
