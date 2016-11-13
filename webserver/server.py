@@ -318,10 +318,10 @@ def open():
         context = {}
         context['cards'] = cards
         for card in cards:
-            cursor2 = g.conn.execute("SELECT * FROM users_have_cards WHERE cardid = " + card[0] + " AND userid = " + session['user'])
+            cursor2 = g.conn.execute("SELECT * FROM users_have_cards WHERE cardid = " + str(card[0]) + " AND userid = " + str(session['user']))
             r = cursor2.first()
             if r is None:
-                g.conn.execute("INSERT INTO users_have_cards VALUES (" + card[0] + ", " + session['user'] + ")")
+                g.conn.execute("INSERT INTO users_have_cards VALUES (" + str(card[0]) + ", " + str(session['user']) + ")")
             cursor2.close()
         cursor.close()
         return render_template("open_pack.html", **context)
