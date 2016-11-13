@@ -305,17 +305,24 @@ def createdeck():
     cursor.close()
     cursor2.close()
     return decks()
-    
+
+@app.route('/deletedeck/<id>', methods=["POST", "GET"])
+def delete_deck(id):
+    user = session['user']
+    cmd = 'DELETE FROM decks WHERE deckid=:deckID1'
+    g.conn.execute(text(cmd), deckID1 = id)
+    return decks()
+
 @app.route('/decks/<id>')
 def decks_id(id):
     user = session['user']
     context = {}
     context['cards'] = []
     for n in range(1,30):
-      cursor = g.conn.execute("SELECT * FROM users, cards_and_relations, classes, decks WHERE users.userid = " + str(user) + " AND decks.deckid = " + str(id) + " AND users.userid=decks.userid AND " + 
-  ''' decks.cardid'''+str(n)+''' = cards_and_relations.cardid AND classes.classid=cards_and_relations.classid ORDER BY cards_and_relations.name ASC''')  # FLAG
+      cmd = 'SELECT * FROM users, cards_and_relations, classes, decks WHERE users.userid = :userID1 AND decks.deckid = :deckID1 AND users.userid=decks.userid AND decks.cardid'+str(n)+' = cards_and_relations.cardid AND classes.classid=cards_and_relations.classid ORDER BY cards_and_relations.name ASC'
+      cursor = g.conn.execute(text(cmd), userID1 = user, deckID1 = id)  # FLAG
       context['cards'].append(cursor.fetchall())
-
+    context['deckID'] = id
     return render_template('deckcards.html', **context)
 
     

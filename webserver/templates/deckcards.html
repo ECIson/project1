@@ -9,6 +9,9 @@
 
 <body>
 <h1>Cards in Deck</h1>
+<form method="POST" action="/deletedeck/{{deckID}}">
+  <button type="submit">Delete Deck</button>
+</form>
 
 <div>
     {% for n in cards%}
