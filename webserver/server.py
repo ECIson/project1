@@ -275,7 +275,9 @@ def createdeck():
     #print totaldecks
     count = 0
     for c in allcards:
-      numcards = int(request.form[str(c[0])])
+      numcards = 0
+      if request.form[str(c[0])] != '':
+        numcards = int(request.form[str(c[0])])
       #print numcards
       for i in range(0,numcards):
         cardIDs = cardIDs + str(c[0]) + ", "
