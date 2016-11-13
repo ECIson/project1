@@ -250,6 +250,62 @@ def decks():
     cursor.close()
     return render_template('decks.html', **context)
     
+@app.route('/makedeck')
+def makedeck():
+    user = session['user']
+    cursor = g.conn.execute("SELECT * FROM users, users_have_cards, cards_and_relations, classes WHERE users.userid = " + str(user) + " AND users.userid=users_have_cards.userid AND users_have_cards.cardid=cards_and_relations.cardid AND classes.classid=cards_and_relations.classid ORDER BY cards_and_relations.name ASC")  # FLAG
+    context = {}
+    context['cards'] = cursor.fetchall()
+    cursor.close()
+    return render_template('makedeck.html', **context)
+    
+@app.route('/createdeck', methods=["POST", "GET"])
+def createdeck():
+    user = session['user']
+    cursor = g.conn.execute("SELECT DISTINCT cards_and_relations.cardid FROM users, users_have_cards, cards_and_relations WHERE users.userid = " + str(user) + " AND users.userid=users_have_cards.userid AND users_have_cards.cardid=cards_and_relations.cardid GROUP BY cards_and_relations.cardid")  # FLAG
+    allcards = cursor.fetchall()
+    
+    deckname = request.form["DeckName"]
+    classname = request.form["ClassName"]
+    cardIDs = ""
+    
+    cursor2 = g.conn.execute("SELECT COUNT(*) FROM decks")
+    deckID = cursor2.fetchone()[0] + 1
+    
+    #print totaldecks
+    count = 0
+    for c in allcards:
+      numcards = int(request.form[str(c[0])])
+      #print numcards
+      for i in range(0,numcards):
+        cardIDs = cardIDs + str(c[0]) + ", "
+        count = count + 1
+        
+    if count != 30:
+      return makedeck()
+      
+    cmd = 'SELECT classid FROM classes WHERE name=(:classname1)';
+    print classname
+    cursor3 = g.conn.execute(text(cmd), classname1 = classname);
+    row = cursor3.fetchone()
+    
+    if(row == None):
+      return makedeck()
+      
+    classid = row[0]
+    
+    print classid
+      
+    #print cardIDs
+    
+    sqlstring = 'INSERT INTO decks VALUES (:deckID1, :deckName1, ' + cardIDs + ':classID1, :userID1)'
+    g.conn.execute(text(sqlstring), deckID1 = deckID, deckName1 = deckname, classID1 = classid, userID1 = user);
+    #sqlstring = "INSERT INTO decks VALUES (0, 'Mage Filler', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 0)";
+
+    cursor.close()
+    cursor2.close()
+    return decks()
+    
 @app.route('/decks/<id>')
 def decks_id(id):
     user = session['user']
