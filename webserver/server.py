@@ -341,7 +341,8 @@ def card_glossary():
 
 @app.route('/store')
 def store():
-    cursor = g.conn.execute("SELECT * FROM expansions WHERE CAST(startdate AS DATE) < CAST(NOW() AS DATE)") # AND (CAST(enddate AS DATE) > CAST(NOW() AS DATE) OR enddate IS NULL)")
+    cursor = g.conn.execute("SELECT * FROM expansions WHERE CAST(startdate AS DATE) < CAST(NOW() AS DATE) "
+                            "AND (enddate = '' OR CAST(enddate AS DATE) > CAST(NOW() AS DATE))")
     context = {}
     context['expansions'] = cursor.fetchall()
     cursor.close()
@@ -371,7 +372,7 @@ def purchased():
             print('B')
             g.conn.execute("UPDATE packs_and_buys SET quantity = quantity + 1 WHERE expansionid = " + request.form['expan'] + " AND userid = " + str(session['user']))
             cursor.close()
-        return user_homepage(session['user'])
+        return user_homepage()
 
 @app.route('/open', methods=["POST", "GET"])
 def open():
