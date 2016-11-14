@@ -133,7 +133,7 @@ def index():
     # DEBUG: this is debugging code to see what request looks like
     print request.args
 
-
+    session['user'] = None
     #
     # example of a database query
     #
@@ -212,22 +212,23 @@ def login():
                 cursor.close()
                 context = dict(data = row['username'])
                 # return render_template('user_homepage.html', context)
-                return user_homepage(row['userid'])
+                session['user'] = row['userid']
+                return user_homepage()
             else:
                 break
     cursor.close()
     return render_template('wrong_login.html')
 
 
-@app.route('/user_homepage.html')
-def user_homepage(user):
+@app.route('/user_homepage')
+def user_homepage():
+    user = session['user']
     cursor = g.conn.execute("SELECT * FROM users WHERE userid = " + str(user))  # FLAG
     stats = cursor.fetchone()
     context = {}
     context['username'] = stats[1]
     context['rank'] = stats[3]
     context['stars'] = stats[4]
-    session['user'] = user
     cursor.close()
     return render_template('user_homepage.html', **context)
     
@@ -306,6 +307,7 @@ def createdeck():
 
     cursor.close()
     cursor2.close()
+    cursor3.close()
     return decks()
 
 @app.route('/deletedeck/<id>', methods=["POST", "GET"])
@@ -324,6 +326,7 @@ def decks_id(id):
       cmd = 'SELECT * FROM users, cards_and_relations, classes, decks WHERE users.userid = :userID1 AND decks.deckid = :deckID1 AND users.userid=decks.userid AND decks.cardid'+str(n)+' = cards_and_relations.cardid AND classes.classid=cards_and_relations.classid ORDER BY cards_and_relations.name ASC'
       cursor = g.conn.execute(text(cmd), userID1 = user, deckID1 = id)  # FLAG
       context['cards'].append(cursor.fetchall())
+      cursor.close()
     context['deckID'] = id
     return render_template('deckcards.html', **context)
 
@@ -372,6 +375,7 @@ def purchased():
 
 @app.route('/open', methods=["POST", "GET"])
 def open():
+    #print str(session['user'])
     cursor = g.conn.execute("SELECT c.cardid, c.name, c.rarityname, c.expansionid, r.weight FROM cards_and_relations "
                             "AS c INNER JOIN raritytable AS r ON c.rarityname = r.name WHERE c.expansionid = " + request.form['pack'])
     r = cursor.fetchall()
@@ -382,13 +386,30 @@ def open():
         cards = chooseFive(r)
         context = {}
         context['cards'] = cards
+        
+        print request.form['pack'] 
+        print session['user']
+        cmd = "SELECT * FROM packs_and_buys WHERE expansionid=" + str(request.form['pack']) + " AND userid=" + str(session['user'])
+        print cmd
+        packcursor = g.conn.execute(cmd)
+        p = packcursor.fetchone()
+        print p['quantity']
+
+        if(p['quantity'] == 1):
+          cmd = "DELETE FROM packs_and_buys WHERE expansionid=" + str(request.form['pack']) + " AND userid=" + str(session['user'])
+          g.conn.execute(cmd)
+        else:
+          g.conn.execute("UPDATE packs_and_buys SET quantity = quantity - 1 WHERE expansionid = " + request.form['pack'] + " AND userid = " + str(session['user']))
+        
+        
         for card in cards:
             cursor2 = g.conn.execute("SELECT * FROM users_have_cards WHERE cardid = " + str(card[0]) + " AND userid = " + str(session['user']))
             r = cursor2.first()
             if r is None:
-                g.conn.execute("INSERT INTO users_have_cards VALUES (" + str(card[0]) + ", " + str(session['user']) + ")")
+                g.conn.execute("INSERT INTO users_have_cards VALUES (" + str(session['user']) + ", " + str(card[0]) + ")")
             cursor2.close()
         cursor.close()
+        packcursor.close()
         return render_template("open_pack.html", **context)
 
 def chooseFive(r):
